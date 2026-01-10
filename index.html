@@ -6,7 +6,974 @@
     <title>Sistema Control de Alimentos PAE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Control de Alimentos PAE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        :root { --primary: #0d6efd; --success: #198754; --danger: #dc3545; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        .main-container { background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin: 20px auto; max-width: 1400px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px 15px 0 0; }
+        .stock-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 12px; transition: all 0.3s; }
+        .stock-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .stock-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .stock-label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-pane { padding: 30px; min-height: 500px; }
+        .nav-tabs .nav-link { color: #495057; border-bottom: 3px solid transparent; }
+        .nav-tabs .nav-link.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; }
+        .tipo-entrada { color: var(--success); font-weight: bold; }
+        .tipo-salida { color: var(--danger); font-weight: bold; }
+        @media print { .no-print { display: none !important; } }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-card { background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 450px; width: 100%; padding: 40px; }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h2 { color: #667eea; font-weight: bold; }
+        .system-content { display: none; }
+        .system-content.show { display: block; }
+    </style>
+</head>
+<body>
+    <!-- PANTALLA DE LOGIN/REGISTRO -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-basket3-fill" style="font-size: 3rem; color: #667eea;"></i>
+                <h2 class="mt-3">Control de Alimentos PAE</h2>
+                <p class="text-muted">Inicia sesión para continuar</p>
+            </div>
+            
+            <div id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Contraseña</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Tu contraseña" required>
+                </div>
+                <button onclick="iniciarSesion()" class="btn btn-primary w-100 btn-lg mb-3">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </button>
+                <div class="text-center">
+                    <p class="text-muted mb-0">¿No tienes cuenta?</p>
+                    <a href="#" onclick="mostrarRegistro(); return false;" class="text-primary">Registrarse</a>
+                </div>
+            </div>
+
+            <div id="registerForm" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre de la Escuela</label>
+                    <input type="text" id="registerEscuela" class="form-control" placeholder="Ej: Escuela Central" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Correo Electrónico</label>
+                    <input type="email" id="registerEmail" class="form-control" placeholder="tu@correo.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Contraseña</label>
+                    <input type="password" id="registerPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Confirmar Contraseña</label>
+                    <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
+                </div>
+                <button onclick="registrarUsuario()" class="btn btn-success w-100 btn-lg mb-3">
+                    <i class="bi bi-person-plus"></i> Registrar
+                </button>
+                <div class="text-center">
+                    <a href="#" onclick="mostrarLogin(); return false;" class="text-primary">¿Ya tienes cuenta? Inicia sesión</a>
+                </div>
+            </div>
+
+            <div id="loginError" class="alert alert-danger mt-3" style="display: none;"></div>
+            <div id="loginSuccess" class="alert alert-success mt-3" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- SISTEMA PRINCIPAL -->
+    <div id="systemContent" class="system-content">
+    <div class="main-container">
+        <!-- ENCABEZADO -->
+        <div class="header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0"><i class="bi bi-basket3-fill"></i> Control de Alimentos PAE</h1>
+                    <p class="mb-0 mt-2 opacity-75" id="nombreEscuela">Gestión de Inventario, Entrada, Salida y Reportes</p>
+                </div>
+                <div>
+                    <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm me-2 no-print">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </button>
+                    <button onclick="if(confirm('¿Borrar todos los datos?')) { localStorage.clear(); location.reload(); }" class="btn btn-light btn-sm no-print">
+                        <i class="bi bi-trash"></i> Resetear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑAS -->
+        <ul class="nav nav-tabs border-0 p-3" id="mainTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="tab-dashboard" data-bs-toggle="tab" data-bs-target="#dashboard"><i class="bi bi-speedometer2"></i> Dashboard</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab-entrada" data-bs-toggle="tab" data-bs-target="#entrada"><i class="bi bi-plus-circle"></i> Entrada</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab-egreso" data-bs-toggle="tab" data-bs-target="#egreso"><i class="bi bi-dash-circle"></i> Egreso</button></li>
+            <li class="nav-item"><button class="nav-link" id="tab-historial" data-bs-toggle="tab" data-bs-target="#historial"><i class="bi bi-clock-history"></i> Historial</button></li>
+        </ul>
+
+        <!-- CONTENIDO -->
+        <div class="tab-content">
+            
+            <!-- DASHBOARD -->
+            <div class="tab-pane fade show active" id="dashboard">
+                <!-- RESUMEN TOTAL -->
+                <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="card-body text-center">
+                        <h6 class="text-white-50 mb-2">STOCK TOTAL DEL INVENTARIO</h6>
+                        <h2 class="mb-0" id="stockTotal" style="font-size: 3rem; font-weight: bold;">0.0 kg</h2>
+                        <small class="text-white-50">Última actualización: <span id="fechaActualizacion"></span></small>
+                    </div>
+                </div>
+
+                <h5 class="mb-4"><i class="bi bi-archive"></i> Inventario Actual por Producto (kg)</h5>
+                <div class="row g-3" id="stockContainer"></div>
+
+                <!-- EVOLUCIÓN DEL STOCK TOTAL -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Evolución del Stock Final por Día</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th rowspan="2">Fecha</th>
+                                        <th colspan="7" class="text-center">Stock Final por Producto (kg)</th>
+                                        <th rowspan="2">Total (kg)</th>
+                                        <th rowspan="2">Variación</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Arroz</th>
+                                        <th>Frijol</th>
+                                        <th>Leche</th>
+                                        <th>Aceite</th>
+                                        <th>Bebida</th>
+                                        <th>Cereal</th>
+                                        <th>Azúcar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="evolucionStock"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENTRADA DE ALIMENTOS -->
+            <div class="tab-pane fade" id="entrada">
+                <h5 class="mb-4"><i class="bi bi-plus-circle"></i> Registrar ENTRADA de Alimentos</h5>
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fecha de Ingreso</label>
+                                    <input type="date" id="entradaFecha" class="form-control">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Selecciona Producto</label>
+                                    <select id="selectProducto" class="form-select form-select-lg">
+                                        <option value="">-- Elige un alimento --</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Cantidad (kg)</label>
+                                    <input type="number" id="cantidadEntrada" class="form-control" step="0.1" min="0" placeholder="0.0">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Tipo de Movimiento</label>
+                                    <select id="tipoMovimiento" class="form-select">
+                                        <option value="">-- Selecciona --</option>
+                                        <option value="Compra">Compra</option>
+                                        <option value="Donación">Donación</option>
+                                        <option value="Entrega del MINED">Entrega del MINED</option>
+                                        <option value="Ajuste">Ajuste de Inventario</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Observaciones</label>
+                                    <textarea id="obsEntrada" class="form-control" rows="3" placeholder="Ej: Entrega del MINED, donación de..."></textarea>
+                                </div>
+
+                                <button onclick="guardarEntrada()" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-plus-circle"></i> Guardar Entrada
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EGRESO (CONSUMO) -->
+            <div class="tab-pane fade" id="egreso">
+                <h5 class="mb-4"><i class="bi bi-dash-circle"></i> Registrar EGRESO (Consumo Diario)</h5>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fecha de Consumo</label>
+                                    <input type="date" id="egresoFecha" class="form-control">
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> Ingresa la cantidad de estudiantes por nivel
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-4">
+                                        <label class="form-label small fw-bold">Parvularia</label>
+                                        <input type="number" id="parvu" class="form-control form-control-lg" min="0" placeholder="0">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small fw-bold">Ciclo I</label>
+                                        <input type="number" id="cicloI" class="form-control form-control-lg" min="0" placeholder="0">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label small fw-bold">Ciclo II-III</label>
+                                        <input type="number" id="cicloII" class="form-control form-control-lg" min="0" placeholder="0">
+                                    </div>
+                                </div>
+                                <button onclick="previsualizarConsumo()" class="btn btn-primary w-100 btn-lg">
+                                    <i class="bi bi-calculator"></i> 1. Calcular Requerimientos
+                                </button>
+                                <button id="btnConfirmar" onclick="procesarEgreso()" class="btn btn-danger w-100 btn-lg mt-2" disabled>
+                                    <i class="bi bi-check-circle"></i> 2. Confirmar y Descontar del Inventario
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-eye"></i> Vista Previa del Consumo</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="previewArea" class="text-center text-muted py-5">
+                                    <i class="bi bi-graph-up display-1"></i>
+                                    <p class="mt-3">Ingresa la cantidad de alumnos y haz clic en "Calcular"</p>
+                                </div>
+                                <div id="tablaPreview" class="d-none">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Alimento</th>
+                                                <th>Total (kg)</th>
+                                                <th>Stock Actual</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="bodyPreview"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL -->
+            <div class="tab-pane fade" id="historial">
+                <h5 class="mb-4"><i class="bi bi-clock-history"></i> Historial de Movimientos (Kardex)</h5>
+                <button onclick="window.print()" class="btn btn-sm btn-secondary mb-3 no-print">
+                    <i class="bi bi-printer"></i> Imprimir Reporte
+                </button>
+                <div class="table-responsive">
+                    <table class="table table-hover tabla-movimientos">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Cantidad (kg)</th>
+                                <th>Stock Final (kg)</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaMovimientos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ====== CONFIGURACIÓN ======
+        // CONEXIÓN CON n8n - URL del webhook
+        const WEBHOOK_N8N = "https://director-digital.app.n8n.cloud/webhook/control-alimentos-pase";
+
+        // Función para enviar datos a n8n
+        async function enviarAn8n(tipo, datos) {
+            if (!WEBHOOK_N8N) {
+                console.log("⚠️ Webhook n8n no configurado");
+                return;
+            }
+
+            try {
+                const payload = {
+                    escuela: usuarioActual?.escuela || "Sin nombre",
+                    timestamp: new Date().toISOString(),
+                    fecha: new Date().toLocaleDateString('es-SV'),
+                    tipo: tipo,
+                    datos: datos,
+                    inventario: inventario,
+                    stockTotal: calcularStockTotal()
+                };
+
+                await fetch(WEBHOOK_N8N, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log("✅ Datos enviados a n8n correctamente");
+            } catch (error) {
+                console.error("❌ Error al enviar a n8n:", error);
+            }
+        }
+
+        const ALIMENTOS = [
+            { id: 'arroz', nombre: 'Arroz Blanco', gramaje: 25 },
+            { id: 'frijol', nombre: 'Frijol Rojo', gramaje: 25 },
+            { id: 'leche', nombre: 'Leche en Polvo', gramaje: 30 },
+            { id: 'aceite', nombre: 'Aceite Vegetal', gramaje: 10 },
+            { id: 'bebida', nombre: 'Bebida Fortificada', gramaje: 30 },
+            { id: 'cereal', nombre: 'Cereal de Avena', gramaje: 30 },
+            { id: 'azucar', nombre: 'Azúcar', gramaje: 12 }
+        ];
+
+        const STOCK_INICIAL = {
+            'arroz': 0,
+            'frijol': 0,
+            'azucar': 0,
+            'aceite': 0,
+            'leche': 0,
+            'bebida': 0,
+            'cereal': 0
+        };
+
+        let inventario = {};
+        let movimientos = [];
+        let previewTemporal = null;
+        let historialStockTotal = [];
+
+        // ====== INICIALIZACIÓN DEL SISTEMA ======
+        function inicializarSistema() {
+            cargarDatos();
+            if (Object.keys(inventario).length === 0) {
+                inventario = { ...STOCK_INICIAL };
+            } else {
+                // Asegurar que todos los productos existan en el inventario (inicializar en 0 si no existen)
+                ALIMENTOS.forEach(alimento => {
+                    if (!(alimento.id in inventario)) {
+                        inventario[alimento.id] = 0;
+                    }
+                });
+            }
+            inicializar();
+            guardarDatos();
+        }
+
+        function inicializar() {
+            // LLENAR SELECT DE PRODUCTOS
+            const selectProducto = document.getElementById('selectProducto');
+            selectProducto.innerHTML = '<option value="">-- Elige un alimento --</option>';
+            ALIMENTOS.forEach(alimento => {
+                const option = document.createElement('option');
+                option.value = alimento.id;
+                option.textContent = `${alimento.nombre} (${alimento.gramaje}g/alumno)`;
+                selectProducto.appendChild(option);
+            });
+
+            // ESTABLECER FECHAS DE HOY
+            document.getElementById('entradaFecha').valueAsDate = new Date();
+            document.getElementById('egresoFecha').valueAsDate = new Date();
+
+            // MOSTRAR INVENTARIO Y TABLA
+            mostrarInventario();
+            actualizarTabla();
+            mostrarEvolucionStock();
+        }
+
+        // ====== ALMACENAMIENTO LOCAL ======
+        function guardarDatos() {
+            localStorage.setItem('inventario_pae', JSON.stringify(inventario));
+            localStorage.setItem('movimientos_pae', JSON.stringify(movimientos));
+            localStorage.setItem('historialStockTotal_pae', JSON.stringify(historialStockTotal));
+        }
+
+        function cargarDatos() {
+            const inv = localStorage.getItem('inventario_pae');
+            const mov = localStorage.getItem('movimientos_pae');
+            const hist = localStorage.getItem('historialStockTotal_pae');
+            if (inv) inventario = JSON.parse(inv);
+            if (mov) movimientos = JSON.parse(mov);
+            if (hist) historialStockTotal = JSON.parse(hist);
+        }
+
+        // ====== CALCULAR STOCK TOTAL ======
+        function calcularStockTotal() {
+            let total = 0;
+            ALIMENTOS.forEach(alimento => {
+                total += inventario[alimento.id] || 0;
+            });
+            return total;
+        }
+
+        // ====== REGISTRAR STOCK TOTAL DEL DÍA ======
+        function registrarStockDelDia(fecha) {
+            const stockTotal = calcularStockTotal();
+            const fechaStr = fecha || new Date().toISOString().split('T')[0];
+            
+            // Crear copia del inventario actual
+            const inventarioDelDia = {};
+            ALIMENTOS.forEach(alimento => {
+                inventarioDelDia[alimento.id] = inventario[alimento.id] || 0;
+            });
+            
+            // Verificar si ya existe registro para esta fecha
+            const indiceExistente = historialStockTotal.findIndex(h => h.fecha === fechaStr);
+            
+            if (indiceExistente >= 0) {
+                // Actualizar el registro existente
+                historialStockTotal[indiceExistente].stockTotal = stockTotal;
+                historialStockTotal[indiceExistente].inventario = inventarioDelDia;
+            } else {
+                // Crear nuevo registro
+                historialStockTotal.push({
+                    fecha: fechaStr,
+                    stockTotal: stockTotal,
+                    inventario: inventarioDelDia
+                });
+            }
+            
+            // Ordenar por fecha (más reciente primero)
+            historialStockTotal.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            guardarDatos();
+            actualizarResumenStock();
+            mostrarEvolucionStock();
+        }
+
+        // ====== ACTUALIZAR RESUMEN STOCK TOTAL ======
+        function actualizarResumenStock() {
+            const stockTotal = calcularStockTotal();
+            document.getElementById('stockTotal').textContent = stockTotal.toFixed(1) + ' kg';
+            
+            const hoy = new Date().toLocaleDateString('es-ES', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('fechaActualizacion').textContent = hoy;
+        }
+
+        // ====== MOSTRAR EVOLUCIÓN DEL STOCK ======
+        function mostrarEvolucionStock() {
+            const tbody = document.getElementById('evolucionStock');
+            tbody.innerHTML = '';
+
+            if (historialStockTotal.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay registros de evolución aún</td></tr>';
+                return;
+            }
+
+            historialStockTotal.forEach((registro, index) => {
+                const tr = document.createElement('tr');
+                const fecha = new Date(registro.fecha + 'T00:00:00');
+                const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                // Obtener stock de cada producto
+                const inventarioDelDia = registro.inventario || {};
+                const arroz = (inventarioDelDia['arroz'] || 0).toFixed(1);
+                const frijol = (inventarioDelDia['frijol'] || 0).toFixed(1);
+                const leche = (inventarioDelDia['leche'] || 0).toFixed(1);
+                const aceite = (inventarioDelDia['aceite'] || 0).toFixed(1);
+                const bebida = (inventarioDelDia['bebida'] || 0).toFixed(1);
+                const cereal = (inventarioDelDia['cereal'] || 0).toFixed(1);
+                const azucar = (inventarioDelDia['azucar'] || 0).toFixed(1);
+
+                let variacion = '';
+                let claseVariacion = '';
+                
+                if (index < historialStockTotal.length - 1) {
+                    const stockAnterior = historialStockTotal[index + 1].stockTotal;
+                    const diferencia = registro.stockTotal - stockAnterior;
+                    
+                    if (diferencia > 0) {
+                        variacion = `+${diferencia.toFixed(1)} kg`;
+                        claseVariacion = 'text-success';
+                    } else if (diferencia < 0) {
+                        variacion = `${diferencia.toFixed(1)} kg`;
+                        claseVariacion = 'text-danger';
+                    } else {
+                        variacion = 'Sin cambio';
+                        claseVariacion = 'text-muted';
+                    }
+                } else {
+                    variacion = '-';
+                    claseVariacion = 'text-muted';
+                }
+
+                tr.innerHTML = `
+                    <td><strong>${fechaFormateada}</strong></td>
+                    <td class="text-center">${arroz}</td>
+                    <td class="text-center">${frijol}</td>
+                    <td class="text-center">${leche}</td>
+                    <td class="text-center">${aceite}</td>
+                    <td class="text-center">${bebida}</td>
+                    <td class="text-center">${cereal}</td>
+                    <td class="text-center">${azucar}</td>
+                    <td class="text-center"><strong>${registro.stockTotal.toFixed(1)}</strong></td>
+                    <td class="${claseVariacion} text-center">${variacion}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ====== MOSTRAR INVENTARIO ======
+        function mostrarInventario() {
+            const container = document.getElementById('stockContainer');
+            container.innerHTML = '';
+            ALIMENTOS.forEach(alimento => {
+                const stock = inventario[alimento.id] || 0;
+                const card = document.createElement('div');
+                card.className = 'col-md-3 col-sm-6';
+                card.innerHTML = `
+                    <div class="card stock-card">
+                        <div class="card-body text-center">
+                            <div class="stock-value">${stock.toFixed(1)}</div>
+                            <div class="stock-label">${alimento.nombre}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            actualizarResumenStock();
+            registrarStockDelDia();
+        }
+
+        // ====== GUARDAR ENTRADA ======
+        function guardarEntrada() {
+            const producto = document.getElementById('selectProducto').value;
+            const cantidad = parseFloat(document.getElementById('cantidadEntrada').value);
+            const fecha = document.getElementById('entradaFecha').value;
+            const tipo = document.getElementById('tipoMovimiento').value;
+            const obs = document.getElementById('obsEntrada').value;
+
+            if (!producto || !cantidad || !fecha || !tipo) {
+                alert('Por favor completa todos los campos obligatorios');
+                return;
+            }
+
+            if (cantidad <= 0) {
+                alert('La cantidad debe ser mayor a cero');
+                return;
+            }
+
+            // Actualizar inventario
+            inventario[producto] = (inventario[producto] || 0) + cantidad;
+
+            // Registrar movimiento
+            const alimento = ALIMENTOS.find(a => a.id === producto);
+            movimientos.unshift({
+                fecha: fecha,
+                tipo: 'ENTRADA',
+                producto: alimento.nombre,
+                cantidad: cantidad,
+                stockFinal: inventario[producto],
+                tipoMovimiento: tipo,
+                observaciones: obs
+            });
+
+            // ENVIAR A n8n
+            enviarAn8n("ENTRADA", {
+                producto: alimento.nombre,
+                cantidad: cantidad,
+                fecha: fecha,
+                tipoMovimiento: tipo,
+                observaciones: obs
+            });
+
+            guardarDatos();
+            mostrarInventario();
+            actualizarTabla();
+            registrarStockDelDia(fecha);
+
+            // Limpiar formulario
+            document.getElementById('selectProducto').value = '';
+            document.getElementById('cantidadEntrada').value = '';
+            document.getElementById('tipoMovimiento').value = '';
+            document.getElementById('obsEntrada').value = '';
+
+            alert('Entrada registrada exitosamente');
+        }
+
+        // ====== ACTUALIZAR TABLA DE MOVIMIENTOS ======
+        function actualizarTabla() {
+            const tbody = document.getElementById('tablaMovimientos');
+            tbody.innerHTML = '';
+
+            if (movimientos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay movimientos registrados</td></tr>';
+                return;
+            }
+
+            movimientos.forEach(mov => {
+                const tr = document.createElement('tr');
+                const tipoClass = mov.tipo === 'ENTRADA' ? 'tipo-entrada' : 'tipo-salida';
+                tr.innerHTML = `
+                    <td>${mov.fecha}</td>
+                    <td><span class="${tipoClass}">${mov.tipo}</span></td>
+                    <td>${mov.producto}</td>
+                    <td>${mov.cantidad.toFixed(2)}</td>
+                    <td>${mov.stockFinal.toFixed(2)}</td>
+                    <td>${mov.observaciones || mov.tipoMovimiento || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ====== PREVISUALIZAR CONSUMO ======
+        function previsualizarConsumo() {
+            const parvu = parseInt(document.getElementById('parvu').value) || 0;
+            const cicloI = parseInt(document.getElementById('cicloI').value) || 0;
+            const cicloII = parseInt(document.getElementById('cicloII').value) || 0;
+            const totalAlumnos = parvu + cicloI + cicloII;
+
+            if (totalAlumnos === 0) {
+                alert('Debes ingresar al menos un estudiante');
+                return;
+            }
+
+            previewTemporal = {};
+            const tbody = document.getElementById('bodyPreview');
+            tbody.innerHTML = '';
+
+            ALIMENTOS.forEach(alimento => {
+                const gramosTotales = alimento.gramaje * totalAlumnos;
+                const kgNecesarios = gramosTotales / 1000;
+                const stockActual = inventario[alimento.id] || 0;
+
+                previewTemporal[alimento.id] = kgNecesarios;
+
+                const tr = document.createElement('tr');
+                const claseStock = stockActual >= kgNecesarios ? 'text-success' : 'text-danger';
+                tr.innerHTML = `
+                    <td>${alimento.nombre}</td>
+                    <td>${kgNecesarios.toFixed(2)}</td>
+                    <td class="${claseStock}">${stockActual.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('previewArea').classList.add('d-none');
+            document.getElementById('tablaPreview').classList.remove('d-none');
+            document.getElementById('btnConfirmar').disabled = false;
+        }
+
+        // ====== PROCESAR EGRESO ======
+        function procesarEgreso() {
+            if (!previewTemporal) {
+                alert('Primero debes calcular los requerimientos');
+                return;
+            }
+
+            const fecha = document.getElementById('egresoFecha').value;
+            const parvu = parseInt(document.getElementById('parvu').value) || 0;
+            const cicloI = parseInt(document.getElementById('cicloI').value) || 0;
+            const cicloII = parseInt(document.getElementById('cicloII').value) || 0;
+            const totalAlumnos = parvu + cicloI + cicloII;
+
+            if (!fecha) {
+                alert('Debes seleccionar una fecha');
+                return;
+            }
+
+            // Verificar stock suficiente
+            for (let id in previewTemporal) {
+                if ((inventario[id] || 0) < previewTemporal[id]) {
+                    if (!confirm(`No hay suficiente stock de ${ALIMENTOS.find(a => a.id === id).nombre}. ¿Deseas continuar igual?`)) {
+                        return;
+                    }
+                }
+            }
+
+            // Procesar egresos
+            ALIMENTOS.forEach(alimento => {
+                const cantidad = previewTemporal[alimento.id];
+                if (cantidad > 0) {
+                    inventario[alimento.id] = Math.max(0, (inventario[alimento.id] || 0) - cantidad);
+                    movimientos.unshift({
+                        fecha: fecha,
+                        tipo: 'SALIDA',
+                        producto: alimento.nombre,
+                        cantidad: cantidad,
+                        stockFinal: inventario[alimento.id],
+                        tipoMovimiento: 'Consumo Diario',
+                        observaciones: `Parvularia: ${parvu}, Ciclo I: ${cicloI}, Ciclo II-III: ${cicloII} (Total: ${totalAlumnos} alumnos)`
+                    });
+                }
+            });
+
+            // ENVIAR A n8n
+            enviarAn8n("EGRESO", {
+                fecha: fecha,
+                estudiantes: {
+                    parvularia: parvu,
+                    cicloI: cicloI,
+                    cicloII: cicloII,
+                    total: totalAlumnos
+                },
+                consumo: previewTemporal
+            });
+
+            guardarDatos();
+            mostrarInventario();
+            actualizarTabla();
+            registrarStockDelDia(fecha);
+
+            // Limpiar formulario
+            document.getElementById('parvu').value = '';
+            document.getElementById('cicloI').value = '';
+            document.getElementById('cicloII').value = '';
+            document.getElementById('previewArea').classList.remove('d-none');
+            document.getElementById('tablaPreview').classList.add('d-none');
+            document.getElementById('btnConfirmar').disabled = true;
+            previewTemporal = null;
+
+            alert('Egreso registrado exitosamente');
+        }
+        // ====== SISTEMA DE LOGIN/REGISTRO ======
+        let usuarioActual = null;
+
+        function mostrarLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('loginSuccess').style.display = 'none';
+        }
+
+        function mostrarRegistro() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('loginSuccess').style.display = 'none';
+        }
+
+        function registrarUsuario() {
+            const escuela = document.getElementById('registerEscuela').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            // Validaciones
+            if (!escuela || !email || !password || !confirmPassword) {
+                mostrarError('Por favor completa todos los campos');
+                return;
+            }
+
+            if (password.length < 6) {
+                mostrarError('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                mostrarError('Las contraseñas no coinciden');
+                return;
+            }
+
+            if (!validarEmail(email)) {
+                mostrarError('Por favor ingresa un correo electrónico válido');
+                return;
+            }
+
+            // Verificar si ya existe un usuario con ese correo
+            const usuarios = JSON.parse(localStorage.getItem('usuarios_pae') || '[]');
+            if (usuarios.find(u => u.email === email)) {
+                mostrarError('Ya existe un usuario con este correo electrónico');
+                return;
+            }
+
+            // Crear nuevo usuario
+            const nuevoUsuario = {
+                escuela: escuela,
+                email: email,
+                password: password,
+                fechaRegistro: new Date().toISOString()
+            };
+
+            usuarios.push(nuevoUsuario);
+            localStorage.setItem('usuarios_pae', JSON.stringify(usuarios));
+
+            mostrarExito('Usuario registrado exitosamente. Ahora puedes iniciar sesión.');
+            setTimeout(() => {
+                mostrarLogin();
+                document.getElementById('loginEmail').value = email;
+            }, 1500);
+        }
+
+        function iniciarSesion() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                mostrarError('Por favor completa todos los campos');
+                return;
+            }
+
+            // Buscar usuario
+            const usuarios = JSON.parse(localStorage.getItem('usuarios_pae') || '[]');
+            const usuario = usuarios.find(u => u.email === email && u.password === password);
+
+            if (!usuario) {
+                mostrarError('Correo o contraseña incorrectos');
+                return;
+            }
+
+            // Guardar sesión
+            usuarioActual = usuario;
+            localStorage.setItem('sesion_pae', JSON.stringify({
+                email: usuario.email,
+                escuela: usuario.escuela,
+                fechaLogin: new Date().toISOString()
+            }));
+
+            // Mostrar sistema
+            mostrarSistema();
+            inicializarSistema();
+        }
+
+        function mostrarSistema() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('systemContent').classList.add('show');
+            
+            // Actualizar nombre de escuela en el header
+            const sesion = JSON.parse(localStorage.getItem('sesion_pae') || '{}');
+            if (sesion.escuela) {
+                document.getElementById('nombreEscuela').textContent = sesion.escuela + ' - Gestión de Inventario, Entrada, Salida y Reportes';
+            }
+        }
+
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de cerrar sesión?')) {
+                localStorage.removeItem('sesion_pae');
+                usuarioActual = null;
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('systemContent').classList.remove('show');
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        function validarEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = mensaje;
+            errorDiv.style.display = 'block';
+            document.getElementById('loginSuccess').style.display = 'none';
+        }
+
+        function mostrarExito(mensaje) {
+            const successDiv = document.getElementById('loginSuccess');
+            successDiv.textContent = mensaje;
+            successDiv.style.display = 'block';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        // Verificar si hay sesión activa al cargar
+        function verificarSesion() {
+            const sesion = localStorage.getItem('sesion_pae');
+            if (sesion) {
+                try {
+                    const sesionData = JSON.parse(sesion);
+                    usuarioActual = sesionData;
+                    mostrarSistema();
+                    inicializarSistema();
+                } catch (e) {
+                    // Si hay error, mostrar login
+                    mostrarLogin();
+                }
+            } else {
+                mostrarLogin();
+            }
+        }
+
+        // Permitir Enter en los formularios
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarSesion();
+            
+            // Event listeners para Enter en los campos
+            const loginEmail = document.getElementById('loginEmail');
+            const loginPassword = document.getElementById('loginPassword');
+            const registerEscuela = document.getElementById('registerEscuela');
+            const registerEmail = document.getElementById('registerEmail');
+            const registerPassword = document.getElementById('registerPassword');
+            const registerConfirmPassword = document.getElementById('registerConfirmPassword');
+
+            if (loginEmail) {
+                loginEmail.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') iniciarSesion();
+                });
+            }
+            if (loginPassword) {
+                loginPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') iniciarSesion();
+                });
+            }
+            if (registerEscuela) {
+                registerEscuela.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') registrarUsuario();
+                });
+            }
+            if (registerEmail) {
+                registerEmail.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') registrarUsuario();
+                });
+            }
+            if (registerPassword) {
+                registerPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') registrarUsuario();
+                });
+            }
+            if (registerConfirmPassword) {
+                registerConfirmPassword.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') registrarUsuario();
+                });
+            }
+        });
+    </script>
+    </div>
+</body>
+</html>
+
         :root { --primary: #0d6efd; --success: #198754; --danger: #dc3545; }
         body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
         .main-container { background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin: 20px auto; max-width: 1400px; }
